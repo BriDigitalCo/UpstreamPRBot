@@ -1,4 +1,6 @@
+import io
 import unittest
+from contextlib import redirect_stdout
 from unittest.mock import patch
 import submit_reviewed as bot
 
@@ -35,14 +37,14 @@ def simulate(*, existing=False, blocked=False, message=VALID):
             return {"html_url": "https://github.com/limitlessprojects/Go-Hybrid/pull/5000"}
         raise AssertionError("Unexpected call: " + path)
 
-    with patch.object(bot, "TOKEN", "mock-not-real"), patch.object(bot, "api", side_effect=fake_api):
+    with patch.object(bot, "TOKEN", "mock-not-real"), patch.object(bot, "api", side_effect=fake_api), redirect_stdout(io.StringIO()):
         status = bot.run()
     return status, calls
 
 
 class SubmissionTests(unittest.TestCase):
     def test_no_token_does_not_make_network_call(self):
-        with patch.object(bot, "TOKEN", ""), patch.object(bot, "api", side_effect=AssertionError("No network call allowed")):
+        with patch.object(bot, "TOKEN", ""), patch.object(bot, "api", side_effect=AssertionError("No network call allowed")), redirect_stdout(io.StringIO()):
             self.assertEqual(bot.run(), 0)
 
     def test_ready_markers_required(self):
