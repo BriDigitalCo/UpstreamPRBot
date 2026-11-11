@@ -1,0 +1,23 @@
+name: Submit reviewed upstream contributions
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  submit:
+    if: github.repository == 'BriDigitalCo/UpstreamPRBot' && vars.AUTO_SUBMIT_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out trusted bot code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Run submitter's safety tests
+        run: python3 -m unittest discover -s .github/scripts -p 'test_*.py' -v
+      - name: Submit at most one reviewed PR
+        env:
+          BRI_UPSTREAM_PR_TOKEN: ${{ secrets.BRI_UPSTREAM_PR_TOKEN }}
+        run: python3 .github/scripts/submit_reviewed.py
